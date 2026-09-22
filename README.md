@@ -1,19 +1,19 @@
-# WANADRI — LilyGO T3 LoRa TX/RX Test
+# WANADRI — Tes LoRa TX/RX LilyGO T3
 
-Standalone firmware for validating a point-to-point LoRa link between two
-LilyGO TTGO T3 v1.6.1 boards, as part of the WANADRI camera-trap image relay
-project. This tests the radio, OLED status display, and payload integrity
-independent of the Raspberry Pi gateway.
+Firmware standalone buat validasi link LoRa point-to-point antar 2 board
+LilyGO TTGO T3 v1.6.1, bagian dari project WANADRI (relay foto camera-trap
+lewat LoRa mesh). Ini nguji radio, OLED status display, dan integritas
+payload, terpisah dari gateway Raspberry Pi.
 
 ## Hardware
 
 - 2x LilyGO TTGO T3 v1.6.1 (ESP32 + SX127x LoRa + SSD1306 OLED)
-- Antenna on each board (required — never power on without one)
-- USB cable per board for flashing/serial
+- Antena tiap board (WAJIB — jangan nyalain tanpa antena)
+- Kabel USB per board buat flash/serial
 
 ## Pin Mapping
 
-| Function | Pin |
+| Fungsi | Pin |
 |---|---|
 | LoRa SCK | 5 |
 | LoRa MISO | 19 |
@@ -24,19 +24,19 @@ independent of the Raspberry Pi gateway.
 | LoRa Band | 915E6 |
 | OLED SDA | 21 |
 | OLED SCL | 22 |
-| OLED Reset | none (software reset, `-1`) |
+| OLED Reset | gak dipake (software reset, `-1`) |
 
-> **Note:** earlier firmware used SDA=4 / SCL=15 and toggled GPIO16 as the
-> OLED reset pin — both caused a `TG1WDT_SYS_RESET` boot loop on this board
-> revision. SDA=21 / SCL=22 (per datasheet) with no reset-pin toggle fixed it.
+> **Catatan:** firmware awal pake SDA=4 / SCL=15 dan toggle GPIO16 sbg reset
+> pin OLED — dua-duanya bikin boot loop `TG1WDT_SYS_RESET` di revisi board
+> ini. SDA=21 / SCL=22 (sesuai datasheet) tanpa toggle reset pin, fix.
 
-## Files
+## File
 
-- `lilygo_tx.ino` — sender. Broadcasts `HELLO#<n>|<crc32>` every 2 seconds.
-- `lilygo_rx.ino` — receiver. Recomputes the CRC32 on each packet, logs
-  RSSI/SNR, and flags corrupt payloads instead of trusting raw text.
+- `lilygo_tx.ino` — pengirim. Broadcast `HELLO#<n>|<crc32>` tiap 2 detik.
+- `lilygo_rx.ino` — penerima. Hitung ulang CRC32 tiap paket, log RSSI/SNR,
+  tandain payload korup, gak asal percaya teks mentah.
 
-## Dependencies (Arduino IDE Library Manager)
+## Dependency (Arduino IDE Library Manager)
 
 - `LoRa` by Sandeep Mistry
 - `Adafruit SSD1306`
@@ -45,33 +45,33 @@ independent of the Raspberry Pi gateway.
 
 Board: **TTGO LoRa32-OLED** (ESP32 core by Espressif Systems).
 
-## Flashing
+## Cara Flash
 
-1. Open `lilygo_tx.ino` in Arduino IDE, select board **TTGO LoRa32-OLED** and
-   the correct port, upload.
-2. Repeat with `lilygo_rx.ino` on the second board.
-3. Open Serial Monitor at **115200 baud** on the RX board to watch results.
+1. Buka `lilygo_tx.ino` di Arduino IDE, pilih board **TTGO LoRa32-OLED**
+   dan port yg bener, Upload.
+2. Ulang buat `lilygo_rx.ino` di board kedua.
+3. Buka Serial Monitor baud **115200** di board RX buat liat hasil.
 
-## Known Issue Log
+## Log Bug yg Ketemu
 
-| Symptom | Cause | Fix |
+| Gejala | Penyebab | Fix |
 |---|---|---|
-| Infinite `TG1WDT_SYS_RESET` reboot loop, OLED never lights up | Wrong I2C pins (SDA=4, SCL=15) | Use SDA=21, SCL=22 |
-| `Guru Meditation Error: StoreProhibited` on boot | `display.clearDisplay()` called before `display.begin()` | Call `clearDisplay()` only after `begin()` succeeds |
-| Board crash when toggling OLED reset | `pinMode`/`digitalWrite` on GPIO16 | Use software reset: `Adafruit_SSD1306 display(128, 64, &Wire, -1)` |
+| Reboot loop `TG1WDT_SYS_RESET` terus-terusan, OLED gak nyala | Pin I2C salah (SDA=4, SCL=15) | Pake SDA=21, SCL=22 |
+| `Guru Meditation Error: StoreProhibited` pas boot | `display.clearDisplay()` dipanggil sebelum `display.begin()` | Panggil `clearDisplay()` cuma setelah `begin()` sukses |
+| Board crash pas toggle reset OLED | `pinMode`/`digitalWrite` di GPIO16 | Pake software reset: `Adafruit_SSD1306 display(128, 64, &Wire, -1)` |
 
-## Test Results (close range, indoor)
+## Hasil Tes (jarak deket, indoor)
 
-- Packets valid (CRC match): **100%**
-- Packets lost: **0**
-- RSSI: **-11 to -20 dBm**
+- Paket valid (CRC cocok): **100%**
+- Paket hilang: **0**
+- RSSI: **-11 sampe -20 dBm**
 - SNR: **~9.5 dB**
 
-CRC32 validation confirms received payloads are bit-exact, not just visually
-similar text.
+Validasi CRC32 mastiin payload yg diterima bener-bener sama persis bit demi
+bit, bukan cuma keliatan mirip doang.
 
 ## Next Steps
 
-- Log RSSI / SNR / packet loss at increasing distances
-- Merge back into the full `lilygo.cpp` firmware (LoRa + OLED + UART to Pi)
-- Integrate with Raspberry Pi 5 gateway once USB boot media is available
+- Log RSSI / SNR / packet loss di jarak makin jauh
+- Gabung balik ke firmware lengkap `lilygo.cpp` (LoRa + OLED + UART ke Pi)
+- Integrasi ke gateway Raspberry Pi 5 abis storage USB-nya kelar
